@@ -1,0 +1,8 @@
+services:
+  worker:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1

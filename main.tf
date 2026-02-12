@@ -87,11 +87,33 @@ resource "aws_instance" "web_server" {
   # Masukkan nama Key Pair yang tadi dibuat di Console
   key_name      = "devops-key" 
 
+  # User Data
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "--- Memulai Setup Otomatis ---"
+              
+              # 1. Update OS
+              apt-get update -y
+              
+              # 2. Install Docker & Docker Compose
+              apt-get install -y docker.io docker-compose
+              
+              # 3. Nyalakan Service Docker
+              systemctl start docker
+              systemctl enable docker
+              
+              # 4. Beri izin user 'ubuntu' agar bisa pakai Docker tanpa sudo
+              usermod -aG docker ubuntu
+              
+              echo "--- Setup Selesai ---"
+              EOF
+  # ---------------------------------------
+
   # Tempelkan Security Group
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   tags = {
-    Name = "Flask-Web-Server"
+    Name = "Flask-Web-Server-Automated"
   }
 }
 
