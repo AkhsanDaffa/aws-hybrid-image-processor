@@ -66,7 +66,7 @@ Alur bagaimana sistem mendeteksi masalah dan mengirim notifikasi:
 
 ```mermaid
 flowchart LR
-    Kuma[Uptime Kuma<br/>K3s:3001] -->|HTTP Ping (60s)| Flask[Flask Web App<br/>EC2:5000]
+    Kuma[Uptime Kuma] -->|HTTP Ping 60s| Flask[Flask Web App<br/>EC2:5000]
     Flask -.->|Response| Kuma
     Kuma -.->|Webhook Alert| Discord((Discord))
 
