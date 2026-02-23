@@ -21,18 +21,17 @@ Sistem ini terdiri dari 3 alur utama yang terpisah namun saling terhubung:
 Alur utama bagaimana gambar diproses:
 
 ```mermaid
-graph TD
-    User[User] -->|1. Upload Image| Flask[Flask Web App\nEC2:5000]
-    Flask -->|2. Save Raw Image| S3[("AWS S3\n(Image Storage)")]
-    Flask -->|3. Send Task| SQS[("AWS SQS\n(Message Queue)")]
-    SQS -.->|4. Poll Task| Worker[Python Worker\nRaspberry Pi]
-    Worker -->|5. Download & Process| S3
-    Worker -->|6. Upload Result| S3
+flowchart LR
+    User((User)) -->|1. Upload Image| Flask[Flask Web App<br/>EC2:5000]
+    Flask -->|2. Save Raw Image| S3[("AWS S3<br/>Image Storage")]
+    Flask -->|3. Send Task| SQS[("AWS SQS<br/>Message Queue")]
+    SQS -.->|4. Poll Task| Worker[Python Worker<br/>Raspberry Pi]
+    Worker <-->|5. Download & Process| S3
 
-    style S3 fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
-    style SQS fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
-    style Flask fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
-    style Worker fill:#C51A4A,stroke:#111,stroke-width:2px,color:white
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
+    classDef edge fill:#C51A4A,stroke:#111,stroke-width:2px,color:white
+    class S3,SQS,Flask aws
+    class Worker edge
 ```
 
 ### 2. Monitoring Flow (Metrics Collection)
@@ -40,25 +39,25 @@ graph TD
 Alur bagaimana metrik sistem dikumpulkan dan divisualisasikan:
 
 ```mermaid
-graph LR
+flowchart LR
     subgraph AWS ["AWS Cloud"]
         EC2[("EC2 Instance")]
-        NodeExp[Node Exporter\nPort:9100]
+        NodeExp[Node Exporter<br/>Port:9100]
     end
 
-    subgraph Edge ["On-Premise / Edge (K3s)"]
-        Prometheus[Prometheus\nOperator]
-        Grafana[Grafana\nDashboards]
+    subgraph Edge ["On-Premise / Edge"]
+        Prometheus[Prometheus<br/>K3s]
+        Grafana[Grafana<br/>Dashboards]
     end
 
-    EC2 -->|Scrape Metrics| NodeExp
-    NodeExp -->|Pull Data| Prometheus
-    Prometheus -->|Query Data| Grafana
+    EC2 --> NodeExp
+    NodeExp -->|Scrape| Prometheus
+    Prometheus -->|Query| Grafana
 
-    style EC2 fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
-    style NodeExp fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
-    style Prometheus fill:#326ce5,stroke:#fff,stroke-width:2px,color:white
-    style Grafana fill:#F46800,stroke:#fff,stroke-width:2px,color:white
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
+    classDef k8s fill:#326ce5,stroke:#fff,stroke-width:2px,color:white
+    class EC2,NodeExp aws
+    class Prometheus,Grafana k8s
 ```
 
 ### 3. Alerting Flow (Notification)
@@ -66,14 +65,17 @@ graph LR
 Alur bagaimana sistem mendeteksi masalah dan mengirim notifikasi:
 
 ```mermaid
-graph LR
-    Kuma[Uptime Kuma\nK3s:3001] -->|HTTP Ping (60s)| Flask[Flask Web App\nEC2:5000]
+flowchart LR
+    Kuma[Uptime Kuma<br/>K3s:3001] -->|HTTP Ping (60s)| Flask[Flask Web App<br/>EC2:5000]
     Flask -.->|Response| Kuma
-    Kuma -.->|Webhook Alert| Discord{{Discord\nNotifications}}
+    Kuma -.->|Webhook Alert| Discord((Discord))
 
-    style Kuma fill:#326ce5,stroke:#fff,stroke-width:2px,color:white
-    style Flask fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
-    style Discord fill:#5865F2,stroke:#fff,stroke-width:2px,color:white
+    classDef k8s fill:#326ce5,stroke:#fff,stroke-width:2px,color:white
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black
+    classDef discord fill:#5865F2,stroke:#fff,stroke-width:2px,color:white
+    class Kuma k8s
+    class Flask aws
+    class Discord discord
 ```
 
 ---
@@ -218,6 +220,8 @@ helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
 kubectl apply -f monitoring/kuma-deployment.yaml
 
 # Update Prometheus config untuk scrape EC2
+# Edit monitoring-config.yaml dan ganti <EC2-PUBLIC-IP> dengan IP EC2 Anda
+vim monitoring/monitoring-config.yaml
 kubectl apply -f monitoring/monitoring-config.yaml
 ```
 
