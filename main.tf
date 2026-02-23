@@ -66,6 +66,14 @@ resource "aws_security_group" "web_sg" {
         protocol    = "-1"
         cidr_blocks = ["0.0.0.0/0"]
     }
+
+    # Izin Masuk Node Exporter (Port 9100) untuk Monitoring
+    ingress {
+        from_port   = 9100
+        to_port     = 9100
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"] # Buka untuk semua (sementara untuk testing)
+    }
 }
 
 # DATA SOURCE

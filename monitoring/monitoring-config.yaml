@@ -1,0 +1,30 @@
+alertmanager:
+  enabled: false
+
+grafana:
+  adminPassword: admin
+  service:
+    type: NodePort
+    nodePort: 32080
+  grafana.ini:
+    security:
+      allow_embedding: true
+    auth.anonymous:
+      enabled: true
+      org_name: Main Org.
+      org_role: Viewer
+
+# Add AWS Server (K3S TUNING)
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: 'aws-ec2'
+        static_configs:
+          - targets: ['<EC2-PUBLIC-IP>:9100']
